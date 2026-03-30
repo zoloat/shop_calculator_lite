@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>商品管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- ヘッダー -->
+    <div class="manage-header">
+      <button class="btn-back btn-icon" onclick="location.href='index.html'">←</button>
+      <h1>商品管理</h1>
+    </div>
+
+    <!-- JSON操作 -->
+    <div class="manage-actions">
+      <button class="btn-sm" onclick="exportJSON()">エクスポート</button>
+      <button class="btn-sm" onclick="importJSON()">インポート</button>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div>
+
+    <!-- 商品一覧 -->
+    <div class="manage-list" id="manage-list"></div>
+
+    <!-- 追加ボタン -->
+    <button class="fab" onclick="openAdd()">＋</button>
+
+    <!-- モーダル -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h2 id="modal-title">商品を追加</h2>
+
+        <div class="form-group">
+          <label>商品名</label>
+          <input type="text" id="field-name" placeholder="例：りんご" maxlength="30">
+        </div>
+
+        <div class="form-group">
+          <label>値段（円）</label>
+          <input type="number" id="field-price" placeholder="例：120" min="0" inputmode="numeric">
+        </div>
+
+        <div class="form-group">
+          <label>カテゴリ（1〜5）</label>
+          <select id="field-category">
+            <option value="1">カテゴリ 1</option>
+            <option value="2">カテゴリ 2</option>
+            <option value="3">カテゴリ 3</option>
+            <option value="4">カテゴリ 4</option>
+            <option value="5">カテゴリ 5</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
+          <button class="btn-danger" id="btn-delete" onclick="deleteProduct()" style="display:none">削除</button>
+          <button class="btn-primary" onclick="saveProduct()">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="manage.js"></script>
+</body>
+</html>

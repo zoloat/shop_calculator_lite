@@ -9,10 +9,29 @@ const DB = {
 
 // ── 状態 ───────────────────────────────────────────────
 let editingId = null;
+let activeCatFilter = null;
+
+// ── カテゴリフィルタ描画 ────────────────────────────────
+function renderCatFilter() {
+  const cats = DB.getCategories();
+  const el = document.getElementById('manage-cat-filter');
+  el.innerHTML = [1,2,3,4,5].map(n =>
+    `<button class="btn-cat${activeCatFilter===n?' active':''}" onclick="toggleManageCat(${n})">${escHtml(cats[n])}</button>`
+  ).join('');
+}
+
+function toggleManageCat(n) {
+  activeCatFilter = activeCatFilter === n ? null : n;
+  renderCatFilter();
+  renderList();
+}
 
 // ── 一覧描画 ───────────────────────────────────────────
 function renderList() {
-  const products = DB.getProducts();
+  const allProducts = DB.getProducts();
+  const products = activeCatFilter
+    ? allProducts.filter(p => p.category === activeCatFilter)
+    : allProducts;
   const el = document.getElementById('manage-list');
 
   if (products.length === 0) {
@@ -143,6 +162,7 @@ function saveCategoryNames() {
   });
   DB.saveCategories(cats);
   closeCatModal();
+  renderCatFilter();
   renderList();
 }
 
@@ -220,6 +240,7 @@ function escHtml(str) {
 
 // ── 初期化 ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  renderCatFilter();
   renderList();
 
   // モーダル背景クリックで閉じる

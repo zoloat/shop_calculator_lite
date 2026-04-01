@@ -31,7 +31,7 @@ function renderList() {
   const allProducts = DB.getProducts();
   const products = activeCatFilter
     ? allProducts.filter(p => p.category === activeCatFilter)
-    : allProducts;
+    : allProducts.slice();
   const el = document.getElementById('manage-list');
 
   if (products.length === 0) {
@@ -40,7 +40,11 @@ function renderList() {
   }
 
   const cats = DB.getCategories();
-  el.innerHTML = products.map((p, i) => `
+  el.innerHTML = products.map((p) => {
+    const gi = allProducts.findIndex(ap => ap.id === p.id);
+    const hasPrev = allProducts.slice(0, gi).some(ap => ap.category === p.category);
+    const hasNext = allProducts.slice(gi + 1).some(ap => ap.category === p.category);
+    return `
     <div class="manage-item" onclick="openEdit('${p.id}')">
       <div style="flex:1">
         <div class="name">${escHtml(p.name)}</div>
@@ -48,11 +52,11 @@ function renderList() {
       </div>
       <div class="price">¥${p.price.toLocaleString()}</div>
       <div class="manage-item-move" onclick="event.stopPropagation()">
-        <button class="btn-move" onclick="moveProduct('${p.id}',-1)" ${i===0?'style="visibility:hidden"':''}>▲</button>
-        <button class="btn-move" onclick="moveProduct('${p.id}',1)" ${i===products.length-1?'style="visibility:hidden"':''}>▼</button>
+        <button class="btn-move" onclick="moveProduct('${p.id}',-1)" ${!hasPrev?'style="visibility:hidden"':''}>▲</button>
+        <button class="btn-move" onclick="moveProduct('${p.id}',1)" ${!hasNext?'style="visibility:hidden"':''}>▼</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── 新規登録モーダル ───────────────────────────────────
@@ -166,11 +170,15 @@ function saveCategoryNames() {
   renderList();
 }
 
-// ── 上下移動 ────────────────────────────────────────────
+// ── 上下移動（同カテゴリ内のみ） ───────────────────────
 function moveProduct(id, dir) {
   const products = DB.getProducts();
   const idx = products.findIndex(p => p.id === id);
-  const target = idx + dir;
+  const cat = products[idx].category;
+  let target = idx + dir;
+  while (target >= 0 && target < products.length && products[target].category !== cat) {
+    target += dir;
+  }
   if (target < 0 || target >= products.length) return;
   [products[idx], products[target]] = [products[target], products[idx]];
   DB.saveProducts(products);

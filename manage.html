@@ -18,6 +18,7 @@
     <div class="manage-actions">
       <button class="btn-sm" onclick="exportJSON()">エクスポート</button>
       <button class="btn-sm" onclick="importJSON()">インポート</button>
+      <button class="btn-sm" onclick="openCatModal()">カテゴリ名</button>
       <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
     </div>
 
@@ -61,6 +62,18 @@
       </div>
     </div>
   </div>
+
+    <!-- カテゴリ名モーダル -->
+    <div class="modal-overlay" id="cat-modal-overlay">
+      <div class="modal">
+        <h2>カテゴリ名を変更</h2>
+        <div id="cat-fields"></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeCatModal()">キャンセル</button>
+          <button class="btn-primary" onclick="saveCategoryNames()">保存</button>
+        </div>
+      </div>
+    </div>
 
   <script src="manage.js"></script>
 </body>

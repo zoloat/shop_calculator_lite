@@ -1,7 +1,10 @@
 // ── ストレージ ──────────────────────────────────────────
+const DEFAULT_CATEGORIES = {1:'カテゴリ1',2:'カテゴリ2',3:'カテゴリ3',4:'カテゴリ4',5:'カテゴリ5'};
 const DB = {
   getProducts: () => JSON.parse(localStorage.getItem('calc_products') || '[]'),
   saveProducts: (arr) => localStorage.setItem('calc_products', JSON.stringify(arr)),
+  getCategories: () => Object.assign({}, DEFAULT_CATEGORIES, JSON.parse(localStorage.getItem('calc_categories') || '{}')),
+  saveCategories: (obj) => localStorage.setItem('calc_categories', JSON.stringify(obj)),
 };
 
 // ── 状態 ───────────────────────────────────────────────
@@ -17,24 +20,36 @@ function renderList() {
     return;
   }
 
-  el.innerHTML = products.map(p => `
+  const cats = DB.getCategories();
+  el.innerHTML = products.map((p, i) => `
     <div class="manage-item" onclick="openEdit('${p.id}')">
-      <div>
+      <div style="flex:1">
         <div class="name">${escHtml(p.name)}</div>
-        <div class="meta">カテゴリ ${p.category}</div>
+        <div class="meta">${escHtml(cats[p.category])}</div>
       </div>
       <div class="price">¥${p.price.toLocaleString()}</div>
+      <div class="manage-item-move" onclick="event.stopPropagation()">
+        <button class="btn-move" onclick="moveProduct('${p.id}',-1)" ${i===0?'style="visibility:hidden"':''}>▲</button>
+        <button class="btn-move" onclick="moveProduct('${p.id}',1)" ${i===products.length-1?'style="visibility:hidden"':''}>▼</button>
+      </div>
     </div>
   `).join('');
 }
 
 // ── 新規登録モーダル ───────────────────────────────────
+function buildCategoryOptions(selected) {
+  const cats = DB.getCategories();
+  return [1,2,3,4,5].map(n =>
+    `<option value="${n}"${selected===n?' selected':''}>${escHtml(cats[n])}</option>`
+  ).join('');
+}
+
 function openAdd() {
   editingId = null;
   document.getElementById('modal-title').textContent = '商品を追加';
   document.getElementById('field-name').value = '';
   document.getElementById('field-price').value = '';
-  document.getElementById('field-category').value = '1';
+  document.getElementById('field-category').innerHTML = buildCategoryOptions(1);
   document.getElementById('btn-delete').style.display = 'none';
   openModal();
 }
@@ -48,7 +63,7 @@ function openEdit(id) {
   document.getElementById('modal-title').textContent = '商品を編集';
   document.getElementById('field-name').value = p.name;
   document.getElementById('field-price').value = p.price;
-  document.getElementById('field-category').value = p.category;
+  document.getElementById('field-category').innerHTML = buildCategoryOptions(p.category);
   document.getElementById('btn-delete').style.display = '';
   openModal();
 }
@@ -100,6 +115,45 @@ function deleteProduct() {
   localStorage.setItem('calc_cart', JSON.stringify(cart));
 
   closeModal();
+  renderList();
+}
+
+// ── カテゴリ名変更 ──────────────────────────────────────
+function openCatModal() {
+  const cats = DB.getCategories();
+  document.getElementById('cat-fields').innerHTML = [1,2,3,4,5].map(n => `
+    <div class="form-group">
+      <label>カテゴリ${n}</label>
+      <input type="text" id="cat-field-${n}" value="${escHtml(cats[n])}" maxlength="20">
+    </div>
+  `).join('');
+  document.getElementById('cat-modal-overlay').classList.add('open');
+  document.getElementById('cat-field-1').focus();
+}
+
+function closeCatModal() {
+  document.getElementById('cat-modal-overlay').classList.remove('open');
+}
+
+function saveCategoryNames() {
+  const cats = {};
+  [1,2,3,4,5].forEach(n => {
+    const val = document.getElementById(`cat-field-${n}`).value.trim();
+    cats[n] = val || DEFAULT_CATEGORIES[n];
+  });
+  DB.saveCategories(cats);
+  closeCatModal();
+  renderList();
+}
+
+// ── 上下移動 ────────────────────────────────────────────
+function moveProduct(id, dir) {
+  const products = DB.getProducts();
+  const idx = products.findIndex(p => p.id === id);
+  const target = idx + dir;
+  if (target < 0 || target >= products.length) return;
+  [products[idx], products[target]] = [products[target], products[idx]];
+  DB.saveProducts(products);
   renderList();
 }
 
@@ -166,5 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // モーダル背景クリックで閉じる
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
+  });
+  document.getElementById('cat-modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('cat-modal-overlay')) closeCatModal();
   });
 });

@@ -1,9 +1,11 @@
 // ── ストレージ ──────────────────────────────────────────
+const DEFAULT_CATEGORIES = {1:'カテゴリ1',2:'カテゴリ2',3:'カテゴリ3',4:'カテゴリ4',5:'カテゴリ5'};
 const DB = {
   getProducts: () => JSON.parse(localStorage.getItem('calc_products') || '[]'),
   saveProducts: (arr) => localStorage.setItem('calc_products', JSON.stringify(arr)),
   getCart: () => JSON.parse(localStorage.getItem('calc_cart') || '[]'),
   saveCart: (arr) => localStorage.setItem('calc_cart', JSON.stringify(arr)),
+  getCategories: () => Object.assign({}, DEFAULT_CATEGORIES, JSON.parse(localStorage.getItem('calc_categories') || '{}')),
 };
 
 // ── 状態 ───────────────────────────────────────────────
@@ -46,7 +48,7 @@ function buildProductListHTML(products) {
       <button class="btn-manage" onclick="location.href='manage.html'">商品管理</button>
     </div>
     <div class="category-filter" id="cat-filter">
-      ${[1,2,3,4,5].map(n => `<button class="btn-cat${activeCategory===n?' active':''}" data-cat="${n}" onclick="toggleCategory(${n})">カテゴリ${n}</button>`).join('')}
+      ${[1,2,3,4,5].map(n => { const cats = DB.getCategories(); return `<button class="btn-cat${activeCategory===n?' active':''}" data-cat="${n}" onclick="toggleCategory(${n})">${escHtml(cats[n])}</button>`; }).join('')}
     </div>
     <div class="product-list" id="product-list"></div>
     <div class="bottom-bar">
@@ -78,7 +80,7 @@ function renderProductList(products) {
         <div class="product-item${qty > 0 ? ' in-cart' : ''}" onclick="selectProduct('${p.id}')">
           <div>
             <div class="product-name">${escHtml(p.name)}</div>
-            <div class="product-meta">カテゴリ ${p.category}</div>
+            <div class="product-meta">${escHtml(DB.getCategories()[p.category])}</div>
           </div>
           <div class="product-right">
             <div class="product-price">¥${p.price.toLocaleString()}</div>

@@ -160,7 +160,8 @@ function moveProduct(id, dir) {
 // ── JSONエクスポート ────────────────────────────────────
 function exportJSON() {
   const products = DB.getProducts();
-  const json = JSON.stringify(products, null, 2);
+  const data = [...products, { _categories: DB.getCategories() }];
+  const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -183,8 +184,11 @@ function handleImport(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!Array.isArray(data)) throw new Error();
+
+      // カテゴリ名を取り出す
+      const catEntry = data.find(p => p._categories);
       const valid = data.filter(p =>
-        p && typeof p.name === 'string' && typeof p.price === 'number' && p.category
+        p && !p._categories && typeof p.name === 'string' && typeof p.price === 'number' && p.category
       ).map(p => ({
         id: p.id || genId(),
         name: p.name,
@@ -194,6 +198,7 @@ function handleImport(e) {
       if (valid.length === 0) { alert('有効なデータがありませんでした'); return; }
       if (!confirm(`${valid.length}件のデータをインポートします。現在のデータは上書きされます。`)) return;
       DB.saveProducts(valid);
+      if (catEntry) DB.saveCategories(catEntry._categories);
       renderList();
       alert('インポートしました');
     } catch {
